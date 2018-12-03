@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.next.sample.mapper.BoardReplyMapper">
+	
+  	<resultMap id="BoardReplyMap" type="com.next.sample.model.BoardReply">
+	    <id column="board_reply_seq" jdbcType="INTEGER" property="boardReplySeq" />
+	    <id column="board_seq" jdbcType="INTEGER" property="boardSeq" />
+	    <id column="reg_seq" jdbcType="INTEGER" property="regSeq" />
+	    <id column="reply_content" jdbcType="VARCHAR" property="replyContent" />
+	    <id column="reg_date" jdbcType="VARCHAR" property="regDate" />
+	    <id column="board_type" jdbcType="VARCHAR" property="boardType" />
+	    <id column="reg_name" jdbcType="VARCHAR" property="regName" />
+	    <id column="group_seq" jdbcType="INTEGER" property="groupSeq" />
+	    <id column="reparent" jdbcType="INTEGER" property="reparent" />
+	    <id column="redepth" jdbcType="INTEGER" property="redepth" />
+	    <id column="reorder" jdbcType="INTEGER" property="reorder" />
+	    <id column="del_yn" jdbcType="VARCHAR" property="delYn" />
+  	</resultMap>
+	
+	
+	<insert id="insertBoardReply" parameterType="com.next.sample.model.BoardReply">
+		insert into board_reply (board_type, board_seq, reg_seq, reply_content, group_seq, redepth, reorder)
+		values (#{boardType},#{boardSeq},#{regSeq},#{replyContent},#{groupSeq},0,#{reorder})
+	</insert>
+	
+
+	<insert id="insertBoardReReply" parameterType="com.next.sample.model.BoardReply">
+		insert into board_reply (board_type, board_seq, reg_seq, reply_content, group_seq, reparent, redepth, reorder)
+		values (#{boardType},#{boardSeq},#{regSeq},#{replyContent},#{groupSeq},#{reparent},#{redepth}, #{reorder})
+	</insert>
+
+	
+	<update id="updateReplyReorderAdd" parameterType="com.next.sample.model.BoardReply">
+		update
+			board_reply
+		set
+			reorder = reorder + 1
+		where
+			board_reply_seq != #{boardReplySeq}
+			and reorder <![CDATA[>=]]> #{reorder}
+			and board_seq = #{boardSeq}
+	</update>
+	
+
+	<update id="updateBoardReply" parameterType="com.next.sample.model.BoardReply">
+		update 
+			board_reply 
+		set 
+			reply_content = #{replyContent}
+		where 
+			board_reply_seq = #{boardReplySeq}
+	</update>
+	
+
+	<update id="deleteBoardReply" parameterType="int">
+		update 
+			board_reply 
+		set 
+			del_yn = 'T'
+		where 
+			board_reply_seq = #{boardReplySeq}
+	</update>
+	
+	
+	<select id="selectBoardReply" parameterType="com.next.sample.model.BoardReply" resultMap="BoardReplyMap">
+		select 
+			reorder
+		from 
+			board_reply
+		where 
+			board_reply_seq = #{boardReplySeq}
+	</select>
+	
+	<select id="selectMaxReply" resultMap="BoardReplyMap">
+		select 
+			* 
+		from 
+			board_reply 
+		where 
+			board_reply_seq = (
+				select
+					MAX(board_reply_seq) board_reply_seq
+				from
+					board_reply
+			)
+	</select>
+	
+	
+	<update id="updateGroupSeq" parameterType="com.next.sample.model.BoardReply">
+		update
+			board_reply
+		set
+			group_seq = #{boardReplySeq}
+		where
+			board_reply_seq = #{boardReplySeq} 
+	</update>
+	
+	
+	<update id="updateGroupSeqChilde" parameterType="com.next.sample.model.BoardReply">
+		update
+			board_reply
+		set
+			group_seq = #{groupSeq}
+		where
+			board_reply_seq = #{boardReplySeq} 
+	</update>
+	
+	
+	<select id="selectReparentGroupSeq" parameterType="com.next.sample.model.BoardReply" resultMap="BoardReplyMap">
+		select
+			board_reply_seq, 
+			group_seq
+		from
+			board_reply
+		where
+			board_reply_seq = #{reparent}
+	</select>
+	
+	<select id="selectReplyReorder" parameterType="com.next.sample.model.BoardReply" resultType="int">
+		select 
+			if(reorder is null, 0, max(reorder)+1) reorder 
+		from 
+			board_reply 
+		where 
+			board_seq = #{boardSeq} 
+	</select>	
+	
+	
+	<select id="selectReReplyReorder" parameterType="com.next.sample.model.BoardReply" resultType="int">
+		select 
+			max(reorder)+1 reorder 
+		from 
+			board_reply 
+		where 
+			board_reply_seq = #{reparent}
+			or reparent = #{reparent} 
+	</select>
+	
+	
+	<select id="selectGroupDepthCheck" parameterType="com.next.sample.model.BoardReply" resultType="int">
+		select
+			if(reorder is null, 0, max(reorder)+1) reorder
+		from
+			board_reply
+		where
+			group_seq = #{groupSeq}
+			and redepth <![CDATA[>=]]> #{redepth}
+			and board_reply_seq <![CDATA[>=]]> #{boardReplySeq}
+			and reparent <![CDATA[>=]]> #{reparent}
+	</select>
+	
+</mapper>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.next.sample.mapper.BoardMapper">
+	
+	<resultMap id="BoardMap" type="com.next.sample.model.Board">
+	    <id column="board_seq" jdbcType="INTEGER" property="boardSeq" />
+	    <result column="type" jdbcType="VARCHAR" property="type" />
+	    <result column="title" jdbcType="VARCHAR" property="title" />
+	    <result column="content" jdbcType="VARCHAR" property="content" />
+	    <result column="name" jdbcType="VARCHAR" property="name" />
+	    <result column="cnt" jdbcType="INTEGER" property="cnt" />
+	    <result column="reg_seq" jdbcType="INTEGER" property="regSeq" />
+	    <result column="reg_date" jdbcType="VARCHAR" property="regDate" />
+	    <result column="del_yn" jdbcType="VARCHAR" property="delYn" />
+	    <result column="reply_count" jdbcType="INTEGER" property="replyCount" />
+	    <collection property="boardReplyList" resultMap="com.next.sample.mapper.BoardReplyMapper.BoardReplyMap" columnPrefix="reply_" />
+  	</resultMap>
+  	
+	
+	<insert id="insertBoard" parameterType="com.next.sample.model.Board">
+		insert into board (type, title, content, name, reg_seq) 
+		values (#{type},#{title},#{content},#{name},#{regSeq})
+	</insert>
+	
+	<update id="updateBoard" parameterType="com.next.sample.model.Board">
+		update 
+			board 
+		set 
+			title=#{title}, content=#{content} 
+		where 
+			board_seq = #{boardSeq}
+	</update>
+
+	<update id="deleteBoard" parameterType="int">
+		update 
+			board
+		set 
+			del_yn = 'T'
+		where 
+			board_seq = #{boardSeq}
+	</update>
+
+	<select id="selectBoard" parameterType="com.next.sample.model.Board" resultMap="BoardMap">
+		select 
+			bn.board_seq as board_seq,
+			bn.type as type,
+			bn.title as title,
+			bn.content as content,
+			bn.name as name,
+			bn.cnt as cnt,
+			bn.reg_seq as reg_seq,
+			bn.reg_date as reg_date,
+			bn.del_yn as del_yn,
+			br.board_reply_seq as reply_board_reply_seq,
+			br.board_seq as reply_board_seq,
+			br.reg_seq as reply_reg_seq,
+			br.reply_content as reply_reply_content,
+			br.reg_date as reply_reg_date,
+			br.del_yn as reply_del_yn,
+			br.reparent as reply_reparent,
+			br.redepth as reply_redepth,
+			br.reorder as reply_reorder,
+			u.`name` as reply_reg_name
+		from board bn 
+		left outer join board_reply br on br.board_seq = bn.board_seq and br.board_type = #{type} and br.del_yn = 'F'
+		left outer join user u on u.user_seq = br.reg_seq
+		where bn.board_seq = #{boardSeq} and bn.type = #{type}
+			and bn.del_yn = 'F'
+		order by reply_reorder asc
+	</select>
+	
+	<select id="selectBoardCount" parameterType="com.next.sample.search.BoardSearch" resultType="int">
+		select count(*) from (
+			select 
+				bn.board_seq as board_seq,
+				bn.type as type,
+				bn.title as title,
+				bn.content as content,
+				bn.name as name,
+				bn.cnt as cnt,
+				bn.reg_seq as reg_seq,
+				bn.reg_date as reg_date,
+				bn.del_yn as del_yn,
+				reply_count.cnt as reply_count
+			from board bn
+			left outer join (select count(1) as cnt, board_seq, reg_seq from board_reply br where br.board_type = #{type} and br.del_yn = 'F' group by br.board_seq) as reply_count on reply_count.board_seq = bn.board_seq
+			left outer join user u on u.user_seq = reply_count.reg_seq
+			where bn.${searchType.SValue} LIKE CONCAT('%', #{keyword}, '%')
+				and bn.type = #{type}
+				and bn.del_yn = 'F'
+				<if test="startDate != null and endDate != null">
+					and bn.reg_date between #{startDate} and #{endDate}
+				</if>
+			order by board_seq desc
+		) a
+		
+	</select>
+	
+	<select id="selectBoardList" parameterType="com.next.sample.search.BoardSearch" resultMap="BoardMap">
+		select 
+			bn.board_seq as board_seq,
+			bn.type as type,
+			bn.title as title,
+			bn.content as content,
+			bn.name as name,
+			bn.cnt as cnt,
+			bn.reg_seq as reg_seq,
+			bn.reg_date as reg_date,
+			bn.del_yn as del_yn,
+			reply_count.cnt as reply_count
+		from board bn
+		left outer join (select count(1) as cnt, board_seq, reg_seq from board_reply br where br.board_type = #{type} and br.del_yn = 'F' group by br.board_seq) as reply_count on reply_count.board_seq = bn.board_seq
+		left outer join user u on u.user_seq = reply_count.reg_seq
+		where bn.${searchType.SValue} LIKE CONCAT('%', #{keyword}, '%')
+			and bn.type = #{type}
+			and bn.del_yn = 'F'
+			<if test="startDate != null and endDate != null">
+				and bn.reg_date between #{startDate} and #{endDate}
+			</if>
+		order by board_seq desc
+		LIMIT #{startRow}, #{boardSize}
+	</select>
+	
+	<update id="addCount" parameterType="com.next.sample.model.Board">
+		update 
+			board
+		set 
+			cnt = cnt + 1 
+		where 
+			board_seq = #{boardSeq}
+	</update>
+
+</mapper>

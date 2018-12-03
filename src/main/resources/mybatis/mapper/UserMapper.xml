@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.next.sample.mapper.UserMapper">
+	
+	<resultMap id="UserMap" type="com.next.sample.model.User">
+	    <id column="user_seq" jdbcType="INTEGER" property="userSeq" />
+	    <id column="id" jdbcType="VARCHAR" property="id" />
+	    <id column="pw" jdbcType="VARCHAR" property="pw" />
+	    <id column="name" jdbcType="VARCHAR" property="name" />
+	    <id column="mod_date" jdbcType="VARCHAR" property="modDate" />
+	    <id column="reg_date" jdbcType="VARCHAR" property="regDate" />
+	    <id column="del_yn" jdbcType="VARCHAR" property="delYn" />
+  	</resultMap>
+	
+	
+	<insert id="insertUser" parameterType="com.next.sample.model.User">
+		insert into user (id, pw, name) 
+		values (#{id},#{pw},#{name})
+	</insert>
+
+	<update id="updateUser" parameterType="com.next.sample.model.User">
+		update user set pw=#{pw}, name=#{name} where user_seq = #{userSeq}
+	</update>
+
+	<delete id="deleteUser" parameterType="int">
+		update user set del_yn = 'T' where user_seq = #{userSeq}
+	</delete>
+
+	<select id="selectUser" parameterType="com.next.sample.model.User" resultMap="UserMap">
+		select * from user where id = #{id} and del_yn = 'F'
+	</select>
+	
+	
+	
+	<!-- select * from member where id=? -->
+	<!-- <select id="b_search" resultType="test.com.spring.board.model.BoardDTO">
+		select * from board where num = #{num}
+	</select>
+
+
+	select * from member where name like ?";
+	<select id="b_searchList" resultType="test.com.spring.board.model.BoardDTO"
+		parameterType="hashmap">
+		select * from 
+		(select rownum rnum,num,title,content,name,regDate,searchCount,reply,replynum,replystep,replylevel 
+		from ((select * from board 
+		<if test="searchKey == 'title'">
+		where title LIKE #{searchWord} 
+		</if> 
+		<if test="searchKey != 'title'">
+		where name LIKE #{searchWord} 
+		</if>
+		order by replynum desc, replystep asc))) where rnum between #{startRow} and #{endRow}
+	</select>
+	
+	
+	<insert id="b_reply_insert" parameterType="test.com.spring.board.model.BoardDTO">
+		insert into board(num,title,content,name,searchCount,reply,replynum,replystep,replylevel) 
+		values(seq_board_num.nextval,#{title},#{content},#{name},0,#{reply},#{replyNum},#{replyStep},#{replyLevel})
+	</insert>
+	
+	
+	<update id="b_reply_update" parameterType="test.com.spring.board.model.BoardDTO">
+		update board set replystep=replystep+1 
+		where replynum=#{replyNum} and replystep > #{replyStep}
+	</update>
+	
+	
+	<select id="b_reply_select" parameterType="test.com.spring.board.model.BoardDTO"
+		resultType="test.com.spring.board.model.BoardDTO">
+		select replynum,replystep,replylevel 
+		from board where num=#{num}
+	</select>
+	
+	
+	<select id="b_reply_search" parameterType="test.com.spring.board.model.BoardDTO">
+		select * from (select rownum rnum,num,title,content,name,regDate,searchCount,reply,replynum,replystep,replylevel 
+		from ((select * from board 
+	</select>
+	
+	
+	<select id="b_reply_searchList" resultType="int"
+		parameterType="hashmap">
+		select count(*) totalRows from board 
+		<if test="searchKey == 'title'">
+		where title LIKE #{searchWord}
+		</if>
+		<if test="searchKey != 'title'">
+		where name LIKE #{searchWord}
+		</if>
+	</select>
+	
+	
+	<select id="b_reply_totalRows" resultType="int">
+		select count(*) totalRows from board
+	</select> -->
+	
+</mapper>

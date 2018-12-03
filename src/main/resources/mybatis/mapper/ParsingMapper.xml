@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.next.sample.mapper.ParsingMapper">
+	
+	<resultMap id="BoardMap" type="com.next.sample.model.ParsingBoard">
+	    <id column="parsing_board_seq" jdbcType="INTEGER" property="parsingBoardSeq" />
+	    <result column="ranking" jdbcType="VARCHAR" property="ranking" />
+	    <result column="name" jdbcType="VARCHAR" property="name" />
+	    <result column="tear" jdbcType="VARCHAR" property="tear" />
+	    <result column="lp" jdbcType="VARCHAR" property="lp" />
+	    <result column="lv" jdbcType="VARCHAR" property="lv" />
+	    <result column="shift" jdbcType="VARCHAR" property="shift" />
+  	</resultMap>
+  	
+	
+	<insert id="insertParsingBoard" parameterType="com.next.sample.model.ParsingBoard">
+		insert into parsing_board (ranking, name, tear, lp, lv, shift) 
+		values (#{ranking},#{name},#{tear},#{lp},#{lv},#{shift})
+	</insert>
+
+</mapper>
